@@ -25,5 +25,8 @@ To launch this script, you just need to run:
 ```bash
 python3 YuDownloader.py
 ```
+## License
+
+![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ## Thank you for visiting
