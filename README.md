@@ -2,6 +2,7 @@
 
 <h2>Description</h2>
 <p>YuDownloader is a python script to download YouTube video</p>
+<p>(Project under improvement)</p>
 
 <h2>Requirements</h2>
 <p>YuDownloader is a python script so, to launch this, you need to install <a href="https://www.python.org/downloads/">python 3</a> on your device</p>
