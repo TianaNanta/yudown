@@ -2,6 +2,7 @@
 
 <h2>Description</h2>
 <p>YuDownloader is a python script to download YouTube video</p>
+
 ![python](https://img.shields.io/badge/python-3.9.2-blue)
 ![python](https://img.shields.io/badge/pytube-12.1.0-red)
 
