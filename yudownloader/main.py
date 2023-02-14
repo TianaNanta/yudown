@@ -9,11 +9,14 @@ from pytube.cli import on_progress
 from rich import print
 from rich.table import Table
 
-from yudownloader import __app_name__, __version__
+from yudownloader import __app_name__, __version__, audio, playlist, video
 from yudownloader.database import create, delete, read
 from yudownloader.model import Media
 
-app = typer.Typer()
+app = typer.Typer(rich_markup_mode='rich')
+app.add_typer(audio.app, name="audio")
+app.add_typer(playlist.app, name="playlist")
+app.add_typer(video.app, name="video")
 
 def _version_callback(value: bool) -> None:
     if value:
@@ -34,8 +37,9 @@ def main(
 ) -> None:
     return
 
-@app.command(short_help="Show the download history")
+@app.command(rich_help_panel="History")
 def history():
+    """ Show the download [blue]history[/blue] ⌚️"""
     media = read()
 
     print("📜", "[bold magenta]Download History[/bold magenta]", "📜")
@@ -55,15 +59,3 @@ def history():
             table.add_row(str(
                 idx), f'[cyan]{media.filename}[/cyan]', f'[yellow]{media.extension}[/yellow]', f'[green]{media.resolution}[/green]', f'[red]{media.link}[/red]')
         print(table)
-        
-@app.command(short_help="Download Youtube Video")
-def video(url: str):
-    return
-
-@app.command(short_help="Download Youtube Audio")
-def audio():
-    return
-
-@app.command(short_help="Download Youtube Playlist")
-def playlist():
-    return
