@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "yudownloader"
+name = "yudown"
 version = "0.1.0"
 description = "This is a python script to download Youtube Media"
 authors = ["TianaNanta <andrianjakananta@gmail.com>"]
@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.scripts]
-yudownloader = "yudownloader.main:app"
+yudown = "yudown.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.7"
