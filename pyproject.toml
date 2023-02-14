@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.scripts]
-yudownloader = "yudownloader.__main__:__main__"
+yudownloader = "yudownloader.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.7"
