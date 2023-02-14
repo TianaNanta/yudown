@@ -1,8 +1,8 @@
-# tests/test_yudownloader.py
+# tests/test_yudown.py
 
 from typer.testing import CliRunner
 
-from yudownloader import __app_name__, __version__, main
+from yudown import __app_name__, __version__, main
 
 runner = CliRunner()
 
