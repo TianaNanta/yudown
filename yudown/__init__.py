@@ -3,7 +3,7 @@
 from tinydb import TinyDB, Query
 
 
-__app_name__ = "YuDownloader"
+__app_name__ = "YuDown"
 __version__ = "0.1.0"
 
 

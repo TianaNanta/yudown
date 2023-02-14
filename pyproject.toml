@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.scripts]
-yudown = "yudown.main:app"
+yudown = "yudown.cli:app"
 
 [tool.poetry.dependencies]
 python = "^3.7"
