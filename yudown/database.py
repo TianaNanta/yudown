@@ -9,7 +9,8 @@ def create(media: Media) -> None:
         'extension': media.extension,
         'resolution': media.resolution,
         'link': media.link,
-        'date_downloaded': media.date_downloaded
+        'date_downloaded': media.date_downloaded,
+        'id': media.id
     }
     db.insert(new_media)
 
@@ -18,7 +19,7 @@ def read() -> List[Media]:
     media = []
     for result in results:
         new_media = Media(result['filename'], result['extension'], result['resolution'],
-                              result['link'], result['date_downloaded'])
+                              result['link'], result['date_downloaded'], result['id'])
         media.append(new_media)
     return media
 
