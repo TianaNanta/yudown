@@ -1,6 +1,7 @@
 """This module provides the YuDownloader CLI."""
 # yudown/cli.py
 
+import time
 from typing import List, Optional
 
 import typer
@@ -8,6 +9,8 @@ from pytube import Playlist, Search, YouTube, exceptions
 from pytube.cli import on_progress
 from rich import print
 from rich.table import Table
+from rich.prompt import Prompt
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from yudown import (__app_name__, __version__, audio_dir, not_spec_dir,
                     playlist_dir, video_dir, yudown_dir)
@@ -22,23 +25,6 @@ def _version_callback(value: bool) -> None:
         # typer.echo(f"{__app_name__} v{__version__}")
         print(f"[bold red]{__app_name__}[/bold red] [green]v{__version__}[/green]")
         raise typer.Exit()
-    
-
-def get_playlist(links: Optional[List[str]]):
-    
-    for url in links:
-        try:
-		# object creation using YouTube
-		# which was imported in the beginning
-            pylst = Playlist(url)
-        except exceptions.VideoPrivate:
-            print("Video is private !") #to handle exception
-        except exceptions.VideoRegionBlocked:
-            print("Video is blocked !")
-        except exceptions.VideoUnavailable:
-            print("Video is not available !")
-        else:
-            return pylst
 
 
 @app.callback()
@@ -52,9 +38,7 @@ def main(
         is_eager=True,
     ),
 ) -> None:
-    return
-    
-    
+    return    
 
 
 @app.command()
@@ -255,7 +239,7 @@ def history(
         print("[bold red]No download history to show[/bold red]")
     else:
         table = Table(show_header=True,
-                      header_style="bold blue", show_lines=True)
+                      header_style="bold", show_lines=True)
         table.add_column("#", style="dim", width=3, justify="center")
         table.add_column("Filename", min_width=20, justify="center")
         table.add_column("Extension", min_width=20, justify="center")
@@ -269,10 +253,49 @@ def history(
         
         
 @app.command("search")
-def make_search(url: Optional[str] = typer.Argument("", help="Youtube link of the audio", show_default=False),
-                   multiple: bool = typer.Option(False, "--multiple", "-m", help="Download multiple files")
-                   ):
-    """[blue]Search[/blue] for video on Youtube 🔍"""  
-    return
+def make_search(
+    search_query: Optional[str] = typer.Argument("", help="The word you are searching for", show_default=False),
+    suggestion: Optional[bool] = typer.Option(
+        None,
+        "--suggestion",
+        "-s",
+        help="Show search suggestion",
+        show_default=False
+    )
+    ):
+    """[blue]Search[/blue] for video on Youtube 🔍"""
     
+    if search_query == "":
+        search_query = Prompt.ask("Enter a word to search for: ")
     
+    s = Search(search_query)
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=False,
+    ) as progress:
+        progress.add_task(description="Searching...", total=None)
+        time.sleep(60)
+    
+    table = Table(
+        show_header=True,
+        header_style="bold",
+        show_lines=True
+    )
+    table.add_column("#", style="dim", width=3, justify="center")
+    table.add_column("Title", min_width=30, justify="center")
+    table.add_column("Link", min_width=20, justify="center")
+    
+    resultat = s.results
+    for idx, resultat in enumerate(resultat, start=1):
+        table.add_row(
+                str(idx), f'[cyan]{resultat.title}[/cyan]', f'[yellow]{resultat.watch_url}[/yellow]')
+    print(table)
+    
+    if suggestion:
+        for i in s.completion_suggestions:
+            print(f"{i}")
+        print(f"[bold green]{len(s.completion_suggestions)}[/bold green] suggestions founded\n")
+    
+    raise typer.Exit()
