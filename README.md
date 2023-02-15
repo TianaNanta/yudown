@@ -1,13 +1,13 @@
-<h1>YuDownloader (Project under improvement)</h1>
+<h1>YuDown (Project under improvement)</h1>
 
 <h2>Description</h2>
-<p>YuDownloader is a python script to download YouTube video</p>
+<p>YuDown is a python script to download YouTube video</p>
 
 ![python](https://img.shields.io/badge/python-3.9.2-blue)
 ![python](https://img.shields.io/badge/pytube-12.1.2-red)
 
 <h2>Requirements</h2>
-<p>YuDownloader is a python script so, to launch this, you need to install <a href="https://www.python.org/downloads/">python 3</a> on your device</p>
+<p>YuDown is a python script so, to launch this, you need to install <a href="https://www.python.org/downloads/">python 3</a> on your device</p>
 
 <h2>Getting started</h2>
 
