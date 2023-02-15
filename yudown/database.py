@@ -2,7 +2,12 @@ from typing import List
 from yudown.model import Media
 from yudown import db, MediaQuery
 
+def change_id(old_id: int, new_id: int) -> None:
+    db.update({'id': new_id},
+              MediaQuery.id == old_id)
+
 def create(media: Media) -> None:
+    count = len(db)            
     media.id = len(db)+1
     new_media = {
         'filename': media.filename,
@@ -13,6 +18,11 @@ def create(media: Media) -> None:
         'id': media.id
     }
     db.insert(new_media)
+    
+    if count > 10:
+        db.remove(MediaQuery.id == 1)
+        for pos in range(2, count):
+            change_id(pos, pos-1)
 
 def read() -> List[Media]:
     results = db.all()
@@ -23,12 +33,5 @@ def read() -> List[Media]:
         media.append(new_media)
     return media
 
-def change_id(old_id: int, new_id: int) -> None:
-    db.update({'id': new_id},
-              MediaQuery.id == old_id)
-
-def delete(id) -> None:
-    count = len(db)
-    db.remove(MediaQuery.id == id)
-    for pos in range(id+1, count):
-        change_id(pos, pos-1)
+def destroy() -> None:
+    db.drop_tables()
