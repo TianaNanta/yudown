@@ -1,24 +1,21 @@
 """This module provides the YuDownloader CLI."""
 # yudown/cli.py
 
-from typing import Optional, List, Tuple
-from os.path import expanduser
+from typing import List, Optional
 
-import time
 import typer
-from pytube import Playlist, Search, YouTube, exceptions, Stream
+from pytube import Playlist, Search, YouTube, exceptions
 from pytube.cli import on_progress
 from rich import print
 from rich.table import Table
-from rich.progress import Progress, BarColumn, TextColumn
 
-from yudown import __app_name__, __version__
-from yudown.database import create, delete, read
+from yudown import (__app_name__, __version__, audio_dir, not_spec_dir,
+                    playlist_dir, video_dir, yudown_dir)
+from yudown.database import create, destroy, read
 from yudown.model import Media
 
 app = typer.Typer(rich_markup_mode='rich')
 
-home = expanduser("~")
 
 def _version_callback(value: bool) -> None:
     if value:
@@ -26,19 +23,6 @@ def _version_callback(value: bool) -> None:
         print(f"[bold red]{__app_name__}[/bold red] [green]v{__version__}[/green]")
         raise typer.Exit()
     
-
-# def progress_bar(
-#     stream: Stream, chunk: bytes, bytes_remaining: int
-# ) -> None:  # pylint: disable=W0613
-#     filesize = stream.filesize
-#     bytes_received = filesize - bytes_remaining
-#     #display_progress_bar(bytes_received, filesize)
-#     progress = Progress(
-#         BarColumn(bar_width=None),
-#         TextColumn("[progress.description]{task.description}"), transient=True,
-#     )
-#     task = progress.add_task(description="Downloading ...")
-#     progress.update(task, total=filesize, advance=bytes_received)
 
 def get_playlist(links: Optional[List[str]]):
     
@@ -97,7 +81,7 @@ def download(
         show_default=False
         ),
     locate: Optional[str] = typer.Option(
-        home+"/YuDown",
+        not_spec_dir,
         "--location",
         "-l",
         help="Location of the downloaded file",
@@ -133,6 +117,7 @@ def download(
                     fileExtension.append(stream.mime_type)
                     fileAudio.append(stream.audio_codec)
                     audio.append(stream)
+
                 i = 1
                 
                 for extension in fileExtension:
@@ -149,7 +134,7 @@ def download(
                             print(f"You're now downloading the audio with extension {extension_to_download}...")
                             # command for downloading the video
                             file = audio[strm-1]
-                            file.download(locate)
+                            file.download(audio_dir)
                     except:
                         print("❌[bold red]Some Error, download not completed ![/bold red]❌")
                         raise typer.Abort()
@@ -171,8 +156,8 @@ def download(
                 if res == 1:
                     try:
                         high = dwn.get_highest_resolution().resolution
-                        print(f"Downloading {yt.title} {high}")
-                        dwn.get_highest_resolution().download(locate, filename=yt.title+"_"+high)
+                        print(f"Downloading {yt.title} [bold italic green]{high}[/bold italic green]")
+                        dwn.get_highest_resolution().download(video_dir, filename=yt.title+"_"+high)
                     except:
                         print(f"Error while downloading the video !")
                         raise typer.Abort()
@@ -185,8 +170,8 @@ def download(
                 elif res == 2:
                     try:
                         low = dwn.get_lowest_resolution().resolution
-                        print(f"Downloading {yt.title} {low}")
-                        dwn.get_lowest_resolution().download(locate, filename=yt.title+"_"+low)
+                        print(f"Downloading {yt.title} [bold italic red]{low}[/bold italic red]")
+                        dwn.get_lowest_resolution().download(video_dir, filename=yt.title+"_"+low)
                     except:
                         print(f"Error while downloading the video !")
                         raise typer.Abort()
@@ -221,7 +206,7 @@ def download(
                             print(f"You're now downloading the video with resolution [bold italic green]{resolution_to_download}[/bold italic green]...")
 
 								# command for downloading the video
-                            videos[strm-1].download(locate, filename=yt.title+"_"+resolution_to_download)
+                            videos[strm-1].download(video_dir, filename=yt.title+"_"+resolution_to_download)
                         except:
                             print("[bold red]Some Error, download not completed ![/bold red]")
                             raise typer.Abort()
@@ -245,8 +230,23 @@ def download(
 
 
 @app.command()
-def history():
+def history(
+    clear: Optional[bool] = typer.Option(
+        None,
+        "--delete",
+        "-D",
+        show_default=False,
+    )
+    ):
     """ Show the download [blue]history[/blue] ⌚️"""
+    
+    if clear:
+        delete = typer.confirm("Are you sure to clear all history ?", abort=True)
+        if delete:
+            print("History deleted")
+            destroy()
+            raise typer.Exit()
+            
     media = read()
 
     print("📜", "[bold magenta]Download History[/bold magenta]", "📜")
