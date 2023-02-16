@@ -6,7 +6,7 @@ import time
 from typing import List, Optional
 
 import typer
-from pytube import Playlist, Search, YouTube, exceptions
+from pytube import Search, YouTube, exceptions
 from pytube.cli import on_progress
 from rich import print
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -14,9 +14,11 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from yudown import (__app_name__, __version__, audio_dir, not_spec_dir,
-                    playlist_dir, video_dir, yudown_dir)
+                    playlist_dir, video_dir)
 from yudown.database import create, destroy, read
 from yudown.model import Media
+from yudown.playlist import PlaylistObject
+from yudown.utils import VerifyLink
 
 app = typer.Typer(rich_markup_mode='rich')
 
@@ -69,13 +71,14 @@ def download(
 ):
     """Download file from [red]Youtube[/red] 📥"""
     if not links:
-        links.append(typer.prompt("Please enter link to download"))
+        links.append(VerifyLink(input("Please enter link to download")))
     
     for url in links:
         try:
 			# object creation using YouTube
 			# which was imported in the beginning
-            yt = YouTube(url, on_progress_callback=on_progress)
+            link = VerifyLink(url)
+            yt = YouTube(link, on_progress_callback=on_progress)
             
         except exceptions.VideoPrivate:
             print("[bold red]Media is private ![/bold red]") #to handle exception
@@ -86,16 +89,24 @@ def download(
         except exceptions.VideoUnavailable:
             print("[bold red]Media is not available ![/bold red]")
             
-        else:                
-            if audio:
-                fileExtension = []
-                fileAudio = []
-                audio = []
+        else:
+            if (not audio) and (not video):
+                print(f"Link: {url}")
+            elif (audio) and (not video):
                 
-                for stream in yt.streams.order_by('mime_type').filter(type='audio'):
-                    fileExtension.append(stream.mime_type)
-                    fileAudio.append(stream.audio_codec)
-                    audio.append(stream)
+                audiobj = yt.streams.order_by('mime_type').filter(type='audio')
+                
+                fileExtension = [stream.mime_type for stream in audiobj]
+                fileAudio = [stream.audio_codec for stream in audiobj]
+                audio = [stream for stream in audiobj]
+                
+                if (not locate == not_spec_dir) and (not os.path.exists(locate)):
+                    print(f"The specified location not exist !")
+                    raise typer.Abort()
+                elif locate != not_spec_dir:
+                    locate = locate
+                else:
+                    locate = audio_dir
 
                 i = 1
                 
@@ -113,14 +124,6 @@ def download(
                             print(f"You're now downloading the audio with extension {extension_to_download}...")
                             # command for downloading the video
                             file = audio[strm-1]
-                            if locate == not_spec_dir:
-                                locate = audio_dir
-                            else:
-                                if os.path.exists(locate):
-                                    locate = locate
-                                else:
-                                    print(f"The specified location not exist !")
-                                    raise typer.Abort()
                             file.download(locate)
                     except:
                         print("❌[bold red]Some Error, download not completed ![/bold red]❌")
@@ -134,7 +137,7 @@ def download(
                     print("[red]Invalid choice !![/red]\n\n")
                     raise typer.Abort()
                 
-            elif video:
+            elif (video) and (not audio):
                 dwn = yt.streams.filter(type="video", progressive="True", file_extension='mp4')
                 print("\n👉 1- [bold green]Highest[/bold green] resolution\n👉 2- [bold red]Lowest[/bold red] resolution\n👉 3- See all available")
                 res = int(input("Choose resolution: "))
@@ -145,7 +148,7 @@ def download(
                         high = dwn.get_highest_resolution().resolution
                         print(f"Downloading {yt.title} [bold italic green]{high}[/bold italic green]")
                         if locate == not_spec_dir:
-                                locate = video_dir
+                            locate = video_dir
                         else:
                             if os.path.exists(locate):
                                 locate = locate
@@ -184,17 +187,14 @@ def download(
                         create(video2)
                         raise typer.Exit()
 
-                elif res == 3:        
-                    video_resolutions = []
-                    fileExtension = []
-                    videos = []
-		
-                    for stream in yt.streams.order_by('resolution').filter(progressive="True"):
-                        video_resolutions.append(stream.resolution)
-                        fileExtension.append(stream.mime_type)
-                        videos.append(stream)
-		
+                elif res == 3:
+                    videobj = yt.streams.order_by('resolution').filter(progressive="True")
+                    
+                    video_resolutions = [stream.resolution for stream in videobj]
+                    fileExtension = [stream.mime_type for stream in videobj]
+                    videos = [stream for stream in videobj]		
                     i = 1
+                    
                     for resolution in video_resolutions:
                         print(f'👉 {i}- [green]{resolution}[/green] -> Extension: {fileExtension[i-1]}')
                         i += 1
@@ -208,7 +208,7 @@ def download(
                             resolution_to_download = video_resolutions[strm-1]
                             print(f"You're now downloading the video with resolution [bold italic green]{resolution_to_download}[/bold italic green]...")
 
-								# command for downloading the video
+							# command for downloading the video
                             if locate == not_spec_dir:
                                 locate = video_dir
                             else:
@@ -235,7 +235,8 @@ def download(
                     raise typer.Abort()
             
             else:
-                print(f"Link: {url}")
+                print("Option error !")
+                raise typer.Abort()
 
 
 @app.command()
@@ -342,33 +343,22 @@ def PlaylistDownload(
 ):
     """Download Youtube [yellow]Playlist[/yellow] video 📼"""
     if link == None:
-        # link of the video to be downloaded
-	    link=Prompt.ask("Enter the playlist link")
-
+        #link of the video to be downloader
+        link = input("Enter the playlist link")
+    
+    url = VerifyLink(link)
+    playlist = PlaylistObject(url)
+    
     try:
-        # object creation using YouTube
-        # which was imported in the beginning
-        pylst = Playlist(link)
-    except exceptions.VideoPrivate:
-        print("Video is private !") #to handle exception
-        raise typer.Abort()
-    except exceptions.VideoRegionBlocked:
-        print("Video is blocked !")
-        raise typer.Abort()
-    except exceptions.VideoUnavailable:
-        print("Video is not available !")
+        print(f"Downloading {playlist.title}")
+        for video in playlist.videos:
+            video.streams.first().download(locate)
+    except:
+        print("Some error, download not completed !")
         raise typer.Abort()
     else:
-        try:
-			# downloading the playlist
-            print(f"Downloading {pylst.title}")
-            for video in pylst.videos:
-                video.streams.first().download(locate)
-        except:
-            print("Some Error, download not completed !")
-            raise typer.Abort()
-        else:
-            playlist = Media(filename=video.title, extension="mp4", resolution="Playlist", link=video.watch_url)
-            create(playlist)
-            print("Downloaded successfully !")
-            raise typer.Exit()
+        play = Media(filename=video.title, extension="mp4", resolution="Playlist", link=video.watch_url)
+        create(play)
+        
+        print("Downloaded successfully !")
+        raise typer.Exit()
