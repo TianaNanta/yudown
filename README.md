@@ -1,39 +1,58 @@
-<h1>YuDown (Project under improvement)</h1>
+# YuDown (project under improvement)
 
-<h2>Description</h2>
-<p>YuDown is a python script to download YouTube video</p>
+YuDown is a python script to download YouTube video developped using [Typer](https://typer.tiangolo.com) and [Pytube](https://github.com/pytube/pytube)
 
-![python](https://img.shields.io/badge/python-3.9.2-blue)
-![python](https://img.shields.io/badge/pytube-12.1.2-red)
+## Installation
 
-<h2>Requirements</h2>
-<p>YuDown is a python script so, to launch this, you need to install <a href="https://www.python.org/downloads/">python 3</a> on your device</p>
-
-<h2>Getting started</h2>
-
-Clone the repository
+To install and run the script:
 
 ```bash
-git clone https://github.com/TianaNanta/yudown.git
+  python3 -m venv venv
+  pip install yudown
+
+  yudown --help
 ```
 
-Setting it up
+## Run Locally
+
+To launch the project, you need [Poetry](https://python-poetry.org) to be installed
+
+Clone the project
 
 ```bash
-cd yudown
-poetry install
+  git clone https://github.com/TianaNanta/yudown.git
 ```
 
-<h2>Usage</h2>
-
-To launch this script, you just need to run:
+Go to the project directory
 
 ```bash
-poetry run python -m yudown
+  cd yudown
 ```
+
+Install dependencies
+
+```bash
+  poetry install
+```
+
+Launch the project
+
+```bash
+  poetry run python -m yudown --help
+```
+
+## Usage/Examples
+
+To download audio file from the given Youtube link
+
+```bash
+  yudown -A https://youtube.com/.....
+```
+
+## Authors
+
+- [@TianaNanta](https://www.github.com/TianaNanta)
 
 ## License
 
-![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
-
-## Thank you for visiting
+[MIT](https://choosealicense.com/licenses/mit/)
