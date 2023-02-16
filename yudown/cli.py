@@ -1,6 +1,7 @@
 """This module provides the YuDownloader CLI."""
 # yudown/cli.py
 
+import os
 import time
 from typing import List, Optional
 
@@ -8,9 +9,9 @@ import typer
 from pytube import Playlist, Search, YouTube, exceptions
 from pytube.cli import on_progress
 from rich import print
-from rich.table import Table
-from rich.prompt import Prompt
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.prompt import Prompt
+from rich.table import Table
 
 from yudown import (__app_name__, __version__, audio_dir, not_spec_dir,
                     playlist_dir, video_dir, yudown_dir)
@@ -50,13 +51,6 @@ def download(
         help="Download youtube Audio file",
         show_default=False
         ),
-    playlist: Optional[bool] = typer.Option(
-        False,
-        "--playlist",
-        "-P",
-        help="Download youtube Playlist",
-        show_default=False
-        ),
     video: Optional[bool] = typer.Option(
         False,
         "--video",
@@ -73,6 +67,7 @@ def download(
     ),
     links: Optional[List[str]] = typer.Argument(None, show_default=False)
 ):
+    """Download file from [red]Youtube[/red] 📥"""
     if not links:
         links.append(typer.prompt("Please enter link to download"))
     
@@ -118,7 +113,15 @@ def download(
                             print(f"You're now downloading the audio with extension {extension_to_download}...")
                             # command for downloading the video
                             file = audio[strm-1]
-                            file.download(audio_dir)
+                            if locate == not_spec_dir:
+                                locate = audio_dir
+                            else:
+                                if os.path.exists(locate):
+                                    locate = locate
+                                else:
+                                    print(f"The specified location not exist !")
+                                    raise typer.Abort()
+                            file.download(locate)
                     except:
                         print("❌[bold red]Some Error, download not completed ![/bold red]❌")
                         raise typer.Abort()
@@ -141,7 +144,15 @@ def download(
                     try:
                         high = dwn.get_highest_resolution().resolution
                         print(f"Downloading {yt.title} [bold italic green]{high}[/bold italic green]")
-                        dwn.get_highest_resolution().download(video_dir, filename=yt.title+"_"+high)
+                        if locate == not_spec_dir:
+                                locate = video_dir
+                        else:
+                            if os.path.exists(locate):
+                                locate = locate
+                            else:
+                                print(f"The specified location not exist !")
+                                raise typer.Abort()
+                        dwn.get_highest_resolution().download(locate, filename=yt.title+" "+high)
                     except:
                         print(f"Error while downloading the video !")
                         raise typer.Abort()
@@ -155,7 +166,15 @@ def download(
                     try:
                         low = dwn.get_lowest_resolution().resolution
                         print(f"Downloading {yt.title} [bold italic red]{low}[/bold italic red]")
-                        dwn.get_lowest_resolution().download(video_dir, filename=yt.title+"_"+low)
+                        if locate == not_spec_dir:
+                                locate = video_dir
+                        else:
+                            if os.path.exists(locate):
+                                locate = locate
+                            else:
+                                print(f"The specified location not exist !")
+                                raise typer.Abort()
+                        dwn.get_lowest_resolution().download(locate, filename=yt.title+" "+low)
                     except:
                         print(f"Error while downloading the video !")
                         raise typer.Abort()
@@ -190,7 +209,15 @@ def download(
                             print(f"You're now downloading the video with resolution [bold italic green]{resolution_to_download}[/bold italic green]...")
 
 								# command for downloading the video
-                            videos[strm-1].download(video_dir, filename=yt.title+"_"+resolution_to_download)
+                            if locate == not_spec_dir:
+                                locate = video_dir
+                            else:
+                                if os.path.exists(locate):
+                                    locate = locate
+                                else:
+                                    print(f"The specified location not exist !")
+                                    raise typer.Abort()
+                            videos[strm-1].download(locate, filename=yt.title+" "+resolution_to_download)
                         except:
                             print("[bold red]Some Error, download not completed ![/bold red]")
                             raise typer.Abort()
@@ -206,9 +233,7 @@ def download(
                 else:
                     print("Error ! Enter a valid number !!")
                     raise typer.Abort()
-                
-            elif playlist:
-                pass
+            
             else:
                 print(f"Link: {url}")
 
@@ -299,3 +324,51 @@ def make_search(
         print(f"[bold green]{len(s.completion_suggestions)}[/bold green] suggestions founded\n")
     
     raise typer.Exit()
+
+
+@app.command("playlist")
+def PlaylistDownload(
+    link: Optional[str] = typer.Argument(
+        None,
+        show_default=False
+    ),
+    locate: Optional[str] = typer.Option(
+        playlist_dir,
+        "--location",
+        "-l",
+        help="Location of the files to download",
+        show_default=True
+    )
+):
+    """Download Youtube [yellow]Playlist[/yellow] video 📼"""
+    if link == None:
+        # link of the video to be downloaded
+	    link=Prompt.ask("Enter the playlist link")
+
+    try:
+        # object creation using YouTube
+        # which was imported in the beginning
+        pylst = Playlist(link)
+    except exceptions.VideoPrivate:
+        print("Video is private !") #to handle exception
+        raise typer.Abort()
+    except exceptions.VideoRegionBlocked:
+        print("Video is blocked !")
+        raise typer.Abort()
+    except exceptions.VideoUnavailable:
+        print("Video is not available !")
+        raise typer.Abort()
+    else:
+        try:
+			# downloading the playlist
+            print(f"Downloading {pylst.title}")
+            for video in pylst.videos:
+                video.streams.first().download(locate)
+        except:
+            print("Some Error, download not completed !")
+            raise typer.Abort()
+        else:
+            playlist = Media(filename=video.title, extension="mp4", resolution="Playlist", link=video.watch_url)
+            create(playlist)
+            print("Downloaded successfully !")
+            raise typer.Exit()
