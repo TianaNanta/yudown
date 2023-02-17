@@ -18,7 +18,7 @@ from yudown import (__app_name__, __version__, audio_dir, not_spec_dir,
 from yudown.database import create, destroy, read
 from yudown.model import Media
 from yudown.playlist import PlaylistObject
-from yudown.utils import VerifyLink
+from yudown.utils import VerifyLink, validate_choice
 
 app = typer.Typer(rich_markup_mode='rich')
 
@@ -41,25 +41,19 @@ def main(
         is_eager=True,
     ),
 ) -> None:
-    return    
+    return
 
 
 @app.command()
 def download(    
-    audio: Optional[bool] = typer.Option(
-        False,
-        "--audio",
-        "-A",
-        help="Download youtube Audio file",
-        show_default=False
-        ),
-    video: Optional[bool] = typer.Option(
-        False,
-        "--video",
-        "-V",
-        help="Download youtube Video file",
-        show_default=False
-        ),
+    type: Optional[str] = typer.Option(
+        "video",
+        "--type",
+        "-t",
+        help="The type of media to download",
+        show_default=True,
+        callback=validate_choice,
+    ),
     locate: Optional[str] = typer.Option(
         not_spec_dir,
         "--location",
@@ -90,125 +84,61 @@ def download(
             print("[bold red]Media is not available ![/bold red]")
             
         else:
-            if (not audio) and (not video):
-                print(f"Link: {url}")
-            elif (audio) and (not video):
-                
-                audiobj = yt.streams.order_by('mime_type').filter(type='audio')
-                
-                fileExtension = [stream.mime_type for stream in audiobj]
-                fileAudio = [stream.audio_codec for stream in audiobj]
-                audio = [stream for stream in audiobj]
-                
-                if (not locate == not_spec_dir) and (not os.path.exists(locate)):
-                    print(f"The specified location not exist !")
-                    raise typer.Abort()
-                elif locate != not_spec_dir:
-                    locate = locate
-                else:
-                    locate = audio_dir
+            match type:
+                case "audio":
+                    audiobj = yt.streams.order_by('mime_type').filter(type='audio')
+                    
+                    fileExtension = [stream.mime_type for stream in audiobj]
+                    fileAudio = [stream.audio_codec for stream in audiobj]
+                    audio = [stream for stream in audiobj]
+                    
+                    if (not locate == not_spec_dir) and (not os.path.exists(locate)):
+                        print(f"The specified location not exist !")
+                        raise typer.Abort()
+                    elif locate != not_spec_dir:
+                        locate = locate
+                    else:
+                        locate = audio_dir
 
-                i = 1
-                
-                for extension in fileExtension:
-                    print(f'👉 {i}- Extension: [yellow]{extension}[/yellow] -> Audio: [bold green]{fileAudio[i-1]}[/bold green]')
-                    i += 1
-                    
-                # To Download the video with the users Choice of resolution
-                strm = int(input('\nChoose a resolution please: '))
-                                
-                if 1 <= strm < i:
-                    try:
-                        # To validate if the user enters a number displayed on the screen...
-                            extension_to_download = fileExtension[strm-1]
-                            print(f"You're now downloading the audio with extension {extension_to_download}...")
-                            # command for downloading the video
-                            file = audio[strm-1]
-                            file.download(locate)
-                    except:
-                        print("❌[bold red]Some Error, download not completed ![/bold red]❌")
-                        raise typer.Abort()
-                    else:
-                        print("\n[bold green]Downloaded successfully ![/bold green] 🥳")
-                        media = Media(filename=yt.title, extension="audio", resolution=fileExtension[strm-1], link=url)
-                        create(media)
-                        raise typer.Exit()
-                else:
-                    print("[red]Invalid choice !![/red]\n\n")
-                    raise typer.Abort()
-                
-            elif (video) and (not audio):
-                dwn = yt.streams.filter(type="video", progressive="True", file_extension='mp4')
-                print("\n👉 1- [bold green]Highest[/bold green] resolution\n👉 2- [bold red]Lowest[/bold red] resolution\n👉 3- See all available")
-                res = int(input("Choose resolution: "))
-                print()
-    
-                if res == 1:
-                    try:
-                        high = dwn.get_highest_resolution().resolution
-                        print(f"Downloading {yt.title} [bold italic green]{high}[/bold italic green]")
-                        if locate == not_spec_dir:
-                            locate = video_dir
-                        else:
-                            if os.path.exists(locate):
-                                locate = locate
-                            else:
-                                print(f"The specified location not exist !")
-                                raise typer.Abort()
-                        dwn.get_highest_resolution().download(locate, filename=yt.title+" "+high)
-                    except:
-                        print(f"Error while downloading the video !")
-                        raise typer.Abort()
-                    else:
-                        print("\nDownload success !!")
-                        video1 = Media(filename=yt.title, extension="mp4", resolution=high, link=url)
-                        create(video1)
-                        raise typer.Exit()
-                    
-                elif res == 2:
-                    try:
-                        low = dwn.get_lowest_resolution().resolution
-                        print(f"Downloading {yt.title} [bold italic red]{low}[/bold italic red]")
-                        if locate == not_spec_dir:
-                                locate = video_dir
-                        else:
-                            if os.path.exists(locate):
-                                locate = locate
-                            else:
-                                print(f"The specified location not exist !")
-                                raise typer.Abort()
-                        dwn.get_lowest_resolution().download(locate, filename=yt.title+" "+low)
-                    except:
-                        print(f"Error while downloading the video !")
-                        raise typer.Abort()
-                    else:
-                        print("\nDownload success !!")
-                        video2 = Media(filename=yt.title, extension="mp4", resolution=low, link=url)
-                        create(video2)
-                        raise typer.Exit()
-
-                elif res == 3:
-                    videobj = yt.streams.order_by('resolution').filter(progressive="True")
-                    
-                    video_resolutions = [stream.resolution for stream in videobj]
-                    fileExtension = [stream.mime_type for stream in videobj]
-                    videos = [stream for stream in videobj]		
                     i = 1
                     
-                    for resolution in video_resolutions:
-                        print(f'👉 {i}- [green]{resolution}[/green] -> Extension: {fileExtension[i-1]}')
+                    for extension in fileExtension:
+                        print(f'👉 {i}- Extension: [yellow]{extension}[/yellow] -> Audio: [bold green]{fileAudio[i-1]}[/bold green]')
                         i += 1
-
-					# To Download the video with the users Choice of resolution
+                        
+                    # To Download the video with the users Choice of resolution
                     strm = int(input('\nChoose a resolution please: '))
-					
+                                    
                     if 1 <= strm < i:
                         try:
-							# To validate if the user enters a number displayed on the screen...
-                            resolution_to_download = video_resolutions[strm-1]
-                            print(f"You're now downloading the video with resolution [bold italic green]{resolution_to_download}[/bold italic green]...")
-
-							# command for downloading the video
+                            # To validate if the user enters a number displayed on the screen...
+                                extension_to_download = fileExtension[strm-1]
+                                print(f"You're now downloading the audio with extension {extension_to_download}...")
+                                # command for downloading the video
+                                file = audio[strm-1]
+                                file.download(locate)
+                        except:
+                            print("❌[bold red]Some Error, download not completed ![/bold red]❌")
+                            raise typer.Abort()
+                        else:
+                            print("\n[bold green]Downloaded successfully ![/bold green] 🥳")
+                            media = Media(filename=yt.title, extension="audio", resolution=fileExtension[strm-1], link=url)
+                            create(media)
+                            raise typer.Exit()
+                    else:
+                        print("[red]Invalid choice !![/red]\n\n")
+                        raise typer.Abort()
+                
+                case "video":
+                    dwn = yt.streams.filter(type="video", progressive="True", file_extension='mp4')
+                    print("\n👉 1- [bold green]Highest[/bold green] resolution\n👉 2- [bold red]Lowest[/bold red] resolution\n👉 3- See all available")
+                    res = int(input("Choose resolution: "))
+                    print()
+        
+                    if res == 1:
+                        try:
+                            high = dwn.get_highest_resolution().resolution
+                            print(f"Downloading {yt.title} [bold italic green]{high}[/bold italic green]")
                             if locate == not_spec_dir:
                                 locate = video_dir
                             else:
@@ -217,26 +147,84 @@ def download(
                                 else:
                                     print(f"The specified location not exist !")
                                     raise typer.Abort()
-                            videos[strm-1].download(locate, filename=yt.title+" "+resolution_to_download)
+                            dwn.get_highest_resolution().download(locate, filename=yt.title+" "+high)
                         except:
-                            print("[bold red]Some Error, download not completed ![/bold red]")
+                            print(f"Error while downloading the video !")
                             raise typer.Abort()
                         else:
-                            print("\nDownloaded successfully !")
-                            video3 = Media(filename=yt.title, extension="mp4", resolution=resolution_to_download, link=url)
-                            create(video3)
+                            print("\nDownload success !!")
+                            video1 = Media(filename=yt.title, extension="mp4", resolution=high, link=url)
+                            create(video1)
                             raise typer.Exit()
+                        
+                    elif res == 2:
+                        try:
+                            low = dwn.get_lowest_resolution().resolution
+                            print(f"Downloading {yt.title} [bold italic red]{low}[/bold italic red]")
+                            if locate == not_spec_dir:
+                                    locate = video_dir
+                            else:
+                                if os.path.exists(locate):
+                                    locate = locate
+                                else:
+                                    print(f"The specified location not exist !")
+                                    raise typer.Abort()
+                            dwn.get_lowest_resolution().download(locate, filename=yt.title+" "+low)
+                        except:
+                            print(f"Error while downloading the video !")
+                            raise typer.Abort()
+                        else:
+                            print("\nDownload success !!")
+                            video2 = Media(filename=yt.title, extension="mp4", resolution=low, link=url)
+                            create(video2)
+                            raise typer.Exit()
+
+                    elif res == 3:
+                        videobj = yt.streams.order_by('resolution').filter(progressive="True")
+                        
+                        video_resolutions = [stream.resolution for stream in videobj]
+                        fileExtension = [stream.mime_type for stream in videobj]
+                        videos = [stream for stream in videobj]		
+                        i = 1
+                        
+                        for resolution in video_resolutions:
+                            print(f'👉 {i}- [green]{resolution}[/green] -> Extension: {fileExtension[i-1]}')
+                            i += 1
+
+                        # To Download the video with the users Choice of resolution
+                        strm = int(input('\nChoose a resolution please: '))
+                        
+                        if 1 <= strm < i:
+                            try:
+                                # To validate if the user enters a number displayed on the screen...
+                                resolution_to_download = video_resolutions[strm-1]
+                                print(f"You're now downloading the video with resolution [bold italic green]{resolution_to_download}[/bold italic green]...")
+
+                                # command for downloading the video
+                                if locate == not_spec_dir:
+                                    locate = video_dir
+                                else:
+                                    if os.path.exists(locate):
+                                        locate = locate
+                                    else:
+                                        print(f"The specified location not exist !")
+                                        raise typer.Abort()
+                                videos[strm-1].download(locate, filename=yt.title+" "+resolution_to_download)
+                            except:
+                                print("[bold red]Some Error, download not completed ![/bold red]")
+                                raise typer.Abort()
+                            else:
+                                print("\nDownloaded successfully !")
+                                video3 = Media(filename=yt.title, extension="mp4", resolution=resolution_to_download, link=url)
+                                create(video3)
+                                raise typer.Exit()
+                        else:
+                            print("Invalid choice !!\n\n")
+                            raise typer.Abort()
+    
                     else:
-                        print("Invalid choice !!\n\n")
+                        print("Error ! Enter a valid number !!")
                         raise typer.Abort()
- 
-                else:
-                    print("Error ! Enter a valid number !!")
-                    raise typer.Abort()
-            
-            else:
-                print("Option error !")
-                raise typer.Abort()
 
 
 @app.command()
