@@ -7,3 +7,10 @@ def VerifyLink(link: str):
         raise typer.Abort()
     else:
         return link
+    
+def validate_choice(choice: str):
+    valid_choice = ["audio", "video", "playlist"]
+    if choice.lower() not in valid_choice:
+        raise typer.BadParameter(f"{choice} is not a valid option. Valid option are {f', '.join(valid for valid in valid_choice)}")
+    else:
+        return choice.lower()
