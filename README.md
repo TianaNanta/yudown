@@ -1,4 +1,4 @@
-# `yudown`
+# `YuDown`
 
 Download Youtube Media from this script and have a wonderful output😋
 
