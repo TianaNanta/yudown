@@ -5,7 +5,7 @@ from pathlib import Path
 from tinydb import Query, TinyDB
 
 __app_name__ = "YuDown"
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 yudown_dir = Path.home()/"YuDown"
 video_dir = yudown_dir/"Video"

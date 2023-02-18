@@ -72,8 +72,8 @@ def history(
                       header_style="bold", show_lines=True)
         table.add_column("#", style="dim", width=3, justify="center")
         table.add_column("Filename", min_width=20, justify="center")
-        table.add_column("Extension", min_width=20, justify="center")
-        table.add_column("Resolution", min_width=15, justify="center")
+        table.add_column("Extension", min_width=3, justify="center")
+        table.add_column("Resolution", min_width=5, justify="center")
         table.add_column("Link", min_width=30, justify="center")
 
         for idx, media in enumerate(media, start=1):
@@ -114,7 +114,7 @@ def make_search(
         show_lines=True
     )
     table.add_column("#", style="dim", width=3, justify="center")
-    table.add_column("Title", min_width=30, justify="center")
+    table.add_column("Title", min_width=20, justify="center")
     table.add_column("Link", min_width=20, justify="center")
     
     resultat = s.results
@@ -154,16 +154,23 @@ def PlaylistDownload(
     playlist = PlaylistObject(url)
     
     try:
-        print(f"Downloading {playlist.title}")
         for video in playlist.videos:
             table = Table(
-        show_header=True,
-        header_style="bold",
-        show_lines=True
-    )
+                show_header=True,
+                header_style="bold",
+                show_lines=True
+            )
             table.add_column("#", style="dim", width=3, justify="center")
-            table.add_column("Title", min_width=30, justify="center")
+            table.add_column("Title", min_width=20, justify="center")
             table.add_column("Link", min_width=20, justify="center")
+            
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                transient=False,
+            ) as progress:
+                progress.add_task(description="Fetching...", total=None)
+                time.sleep(30)
             
             for idx, video in enumerate(video, start=1):
                 table.add_row(
@@ -173,6 +180,7 @@ def PlaylistDownload(
             down = typer.confirm("Download this playlist ?")
             if not down:
                 raise typer.Abort()
+            print(f"Downloading {playlist.title}")
             video.streams.first().download(locate)
     except:
         print("Some error, download not completed !")
@@ -230,18 +238,37 @@ def download(
             match type:
                 case "audio":
                     audiobj = yt.streams.order_by('mime_type').filter(type='audio')
-                    
+
                     fileExtension = [stream.mime_type for stream in audiobj]
-                    fileAudio = [stream.audio_codec for stream in audiobj]
                     audio = [stream for stream in audiobj]
                     
                     locate = choise_dir(location, "audio")
 
                     i = 1
                     
-                    for extension in fileExtension:
-                        print(f'👉 {i}- Extension: [yellow]{extension}[/yellow] -> Audio: [bold green]{fileAudio[i-1]}[/bold green]')
+                    with Progress(
+                        SpinnerColumn(),
+                        TextColumn("[progress.description]{task.description}"),
+                        transient=False,
+                    ) as progress:
+                        progress.add_task(description="Fetching...", total=None)
+                        time.sleep(30)
+                    
+                    table = Table(
+                        show_header=True,
+                        header_style="bold",
+                        show_lines=True
+                    )
+                    table.add_column("#", style="dim", width=3, justify="center")
+                    table.add_column("Title", min_width=20, justify="center")
+                    table.add_column("Type", min_width=3, justify="center")
+                    table.add_column("Extension", min_width=3, justify="center")
+                    
+                    for stream in audiobj:
+                        table.add_row(
+                        str(i), f'[cyan]{title}[/cyan]', f'[yellow]{stream.audio_codec}[/yellow]', f'[green]{stream.mime_type}[/green]')
                         i += 1
+                    print(table)
                         
                     # To Download the video with the users Choice of resolution
                     strm = int(input('\nChoose a resolution please: '))
@@ -250,8 +277,12 @@ def download(
                         try:
                             # To validate if the user enters a number displayed on the screen...
                                 extension_to_download = fileExtension[strm-1]
-                                print(f"You're now downloading the audio with extension {extension_to_download}...")
+                                
+                                down = typer.confirm(f"Confirm downloading {title} {extension_to_download} ?")                                
+                                if not down:
+                                    raise typer.Abort()
                                 # command for downloading the video
+                                print(f"You're now downloading the audio with extension {extension_to_download}...")
                                 file = audio[strm-1]
                                 file.download(locate)
                         except:
@@ -313,9 +344,29 @@ def download(
                         videos = [stream for stream in videobj]		
                         i = 1
                         
-                        for resolution in video_resolutions:
-                            print(f'👉 {i}- [green]{resolution}[/green] -> Extension: {fileExtension[i-1]}')
+                        with Progress(
+                            SpinnerColumn(),
+                            TextColumn("[progress.description]{task.description}"),
+                            transient=False,
+                        ) as progress:
+                            progress.add_task(description="Fetching...", total=None)
+                            time.sleep(30)
+                        
+                        table = Table(
+                            show_header=True,
+                            header_style="bold",
+                            show_lines=True
+                        )
+                        table.add_column("#", style="dim", width=3, justify="center")
+                        table.add_column("Title", min_width=20, justify="center")
+                        table.add_column("Resolution", min_width=3, justify="center")
+                        table.add_column("Extension", min_width=5, justify="center")
+                        
+                        for stream in videobj:
+                            table.add_row(
+                            str(i), f'[cyan]{title}[/cyan]', f'[yellow]{stream.resolution}[/yellow]', f'[green]{stream.mime_type}[/green]')
                             i += 1
+                        print(table)
 
                         # To Download the video with the users Choice of resolution
                         strm = int(input('\nChoose a resolution please: '))
@@ -325,6 +376,9 @@ def download(
                                 # To validate if the user enters a number displayed on the screen...
                                 resolution_to_download = video_resolutions[strm-1]
                                 
+                                downl = typer.confirm(f"Confirm downloading {title} {resolution_to_download} ?")
+                                if not downl:
+                                    raise typer.Abort()
                                 print(f"You're now downloading the video with resolution [bold italic green]{resolution_to_download}[/bold italic green]...")
 
                                 videos[strm-1].download(locate, filename=title+" "+resolution_to_download)
