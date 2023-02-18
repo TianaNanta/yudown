@@ -20,7 +20,7 @@ from yudown.playlist import PlaylistObject
 from yudown.utils import (VerifyLink, choise_dir, validate_choice,
                           validate_location)
 
-app = typer.Typer(rich_markup_mode='rich')
+app = typer.Typer(rich_markup_mode='rich', help="Download Youtube Media from this script and have a wonderful output😋")
 
 
 def _version_callback(value: bool) -> None:
