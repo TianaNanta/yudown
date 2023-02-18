@@ -80,7 +80,7 @@ yudown download [OPTIONS] [LINKS]...
 **Options**:
 
 * `-t, --type TEXT`: The type of media to download  [default: video]
-* `-l, --location PATH`: Location of the downloaded file  [default: /home/nanta/YuDown/notSpecified]
+* `-l, --location PATH`: Location of the downloaded file  [default: ~/YuDown/notSpecified]
 * `--help`: Show this message and exit.
 
 ## `yudown history`
