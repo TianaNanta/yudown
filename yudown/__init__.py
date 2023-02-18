@@ -1,35 +1,33 @@
 """Top-level package for YuDownloader."""
 # yudownloader/__init__.py
-import os
-from os.path import expanduser
+from pathlib import Path
 
 from tinydb import Query, TinyDB
 
 __app_name__ = "YuDown"
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
-home = expanduser("~")
-yudown_dir = home+"/YuDown"
-video_dir = yudown_dir+"/video"
-audio_dir = yudown_dir+"/audio"
-playlist_dir = yudown_dir+"/playlist"
-not_spec_dir = yudown_dir+"/notSpecified"
+yudown_dir = Path.home()/"YuDown"
+video_dir = yudown_dir/"Video"
+audio_dir = yudown_dir/"Audio"
+playlist_dir = yudown_dir/"Playlist"
+not_spec_dir = yudown_dir/"notSpecified"
 
-if not os.path.exists(yudown_dir):
-    os.makedirs(yudown_dir, exist_ok=True)
+if not Path.exists(yudown_dir):
+    Path(yudown_dir).mkdir(exist_ok=True)
     
-if not os.path.exists(video_dir):
-    os.makedirs(video_dir, exist_ok=True)
+if not Path.exists(video_dir):
+    Path(video_dir).mkdir(exist_ok=True)
     
-if not os.path.exists(audio_dir):
-    os.makedirs(audio_dir, exist_ok=True)
+if not Path.exists(audio_dir):
+    Path(audio_dir).mkdir(exist_ok=True)
     
-if not os.path.exists(playlist_dir):
-    os.makedirs(playlist_dir, exist_ok=True)
+if not Path.exists(playlist_dir):
+    Path(playlist_dir).mkdir(exist_ok=True)
     
-if not os.path.exists(not_spec_dir):
-    os.makedirs(not_spec_dir, exist_ok=True)
+if not Path.exists(not_spec_dir):
+    Path(not_spec_dir).mkdir(exist_ok=True)
 
-db = TinyDB(yudown_dir+"/history.json")
+db = TinyDB(yudown_dir/"history.json")
 db.default_table_name = 'media-history'
 MediaQuery = Query()

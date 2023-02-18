@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yudown"
-version = "0.3.0"
+version = "0.4.0"
 description = "This is a python script to download Youtube Media file"
 authors = ["TianaNanta <andrianjakananta@gmail.com>"]
 license = "MIT"
