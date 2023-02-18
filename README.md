@@ -6,7 +6,7 @@ Download Youtube Media from this script and have a wonderful output😋
 
 To install and run the script:
 
-```bash
+```console
   python3 -m venv venv
   pip install yudown
 
@@ -19,27 +19,29 @@ To launch the project, you need [Poetry](https://python-poetry.org) to be instal
 
 Clone the project
 
-```bash
+```console
   git clone https://github.com/TianaNanta/yudown.git
 ```
 
 Go to the project directory
 
-```bash
+```console
   cd yudown
 ```
 
 Install dependencies
 
-```bash
+```console
   poetry install
 ```
 
 Launch the project
 
-```bash
+```console
   poetry run python -m yudown --help
 ```
+
+## Usage
 
 **Usage**:
 
