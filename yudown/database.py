@@ -1,6 +1,7 @@
 from typing import List
+
+from yudown import MediaQuery, db
 from yudown.model import Media
-from yudown import db, MediaQuery
 
 
 def change_id(old_id: int, new_id: int) -> None:

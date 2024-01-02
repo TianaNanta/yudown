@@ -1,7 +1,7 @@
 """yudown entry point script."""
 # yudown/__main__.py
 
-from yudown import cli, __app_name__
+from yudown import __app_name__, cli
 
 
 def main():
