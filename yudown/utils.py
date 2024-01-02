@@ -12,18 +12,23 @@ def VerifyLink(link: str):
         raise typer.Abort()
     else:
         return link
-    
+
+
 def validate_choice(choice: str):
     valid_choice = ["audio", "video", "playlist"]
     if choice.lower() not in valid_choice:
-        raise typer.BadParameter(f"{choice} is not a valid option. Valid option are {', '.join(valid for valid in valid_choice)}")
+        raise typer.BadParameter(
+            f"{choice} is not a valid option. Valid option are {', '.join(valid for valid in valid_choice)}"
+        )
     else:
         return choice.lower()
+
 
 def validate_location(location: Path):
     if not location.is_dir():
         raise typer.BadParameter(f"The path specified {location} is not a directory")
     return location
+
 
 def choise_dir(location: Path, choice: str):
     if location == not_spec_dir:

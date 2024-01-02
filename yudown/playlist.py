@@ -5,7 +5,7 @@ from pytube import Playlist, exceptions
 from rich import print
 
 
-def PlaylistObject(link: Optional[str]):    
+def PlaylistObject(link: Optional[str]):
     try:
         # object creating using Youtube
         pylst = Playlist(link)
